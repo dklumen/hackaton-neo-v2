@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Server, Wifi, AlertTriangle, AlertCircle, CheckCircle, RefreshCw, Clock } from 'lucide-react';
+import { Activity, Server, Wifi, AlertTriangle, AlertCircle, CheckCircle, RefreshCw, Clock, Brain, Zap, TrendingUp, Shield, Cpu } from 'lucide-react';
 import apiService from '../services/apiService';
 
 const LocationDetail = ({ location, onBack }) => {
@@ -8,6 +8,8 @@ const LocationDetail = ({ location, onBack }) => {
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [diagnosticResult, setDiagnosticResult] = useState(null);
   const [runningDiagnostic, setRunningDiagnostic] = useState(false);
+  const [aiInsights, setAiInsights] = useState(null);
+  const [loadingAiInsights, setLoadingAiInsights] = useState(false);
 
   useEffect(() => {
     // Fetch devices for this location
@@ -26,6 +28,31 @@ const LocationDetail = ({ location, onBack }) => {
     fetchDevices();
   }, [location.id]);
 
+  useEffect(() => {
+    // Fetch AI insights for this location
+    const fetchAiInsights = async () => {
+      // Only load AI insights if we have devices
+      if (devices.length === 0) return;
+      
+      setLoadingAiInsights(true);
+      try {
+        // In a real app, this would be an API call
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Mock AI insights based on location status
+        const mockInsights = generateMockAiInsights(location, devices);
+        setAiInsights(mockInsights);
+      } catch (error) {
+        console.error('Error fetching AI insights:', error);
+      } finally {
+        setLoadingAiInsights(false);
+      }
+    };
+
+    fetchAiInsights();
+  }, [devices, location]);
+
   const runDiagnostic = async (deviceId) => {
     setRunningDiagnostic(true);
     try {
@@ -36,6 +63,76 @@ const LocationDetail = ({ location, onBack }) => {
     } finally {
       setRunningDiagnostic(false);
     }
+  };
+
+  // Generate mock AI insights based on location and devices
+  const generateMockAiInsights = (location, devices) => {
+    const offlineDevices = devices.filter(d => d.status === 'offline');
+    const warningDevices = devices.filter(d => d.status === 'warning');
+    
+    const insights = {
+      networkHealth: {
+        score: location.status === 'online' ? 92 : location.status === 'warning' ? 68 : 45,
+        trend: location.status === 'online' ? 'up' : 'down',
+        anomalyDetected: location.status !== 'online'
+      },
+      predictiveAlerts: [],
+      rootCauseAnalysis: null,
+      recommendations: []
+    };
+
+    // Add predictive alerts based on device status
+    if (warningDevices.length > 0) {
+      insights.predictiveAlerts.push({
+        severity: 'warning',
+        device: warningDevices[0].name,
+        prediction: `High likelihood (87%) of packet loss increase in the next 24 hours`,
+        confidence: 87
+      });
+    }
+
+    if (location.status === 'warning' || location.status === 'offline') {
+      insights.predictiveAlerts.push({
+        severity: 'critical',
+        device: devices[0]?.name || 'Core Router',
+        prediction: `Potential bandwidth saturation predicted within 48 hours`,
+        confidence: 74
+      });
+    }
+
+    // Root cause analysis for offline devices
+    if (offlineDevices.length > 0) {
+      insights.rootCauseAnalysis = {
+        primaryDevice: offlineDevices[0].name,
+        relatedDevices: offlineDevices.slice(1).map(d => d.name),
+        cause: `Power distribution unit failure at ${location.name} data center`,
+        confidence: 89,
+        affectedServices: ['External API Access', 'Backup Systems']
+      };
+    } else if (warningDevices.length > 0) {
+      insights.rootCauseAnalysis = {
+        primaryDevice: warningDevices[0].name,
+        relatedDevices: warningDevices.slice(1).map(d => d.name),
+        cause: `Intermittent packet loss due to fiber degradation in main trunk`,
+        confidence: 73,
+        affectedServices: ['VoIP Services']
+      };
+    }
+
+    // Add recommendations
+    if (location.status === 'offline') {
+      insights.recommendations.push('Dispatch on-site technician to inspect power distribution units');
+      insights.recommendations.push('Initiate failover to secondary data center');
+    } else if (location.status === 'warning') {
+      insights.recommendations.push('Schedule maintenance window for fiber inspection');
+      insights.recommendations.push('Temporarily increase bandwidth allocation for critical services');
+      insights.recommendations.push('Update QoS policies to prioritize latency-sensitive traffic');
+    } else {
+      insights.recommendations.push('Schedule preventative maintenance within next 30 days');
+      insights.recommendations.push('Consider upgrading network equipment in Q3 to accommodate growing traffic patterns');
+    }
+
+    return insights;
   };
 
   // Get device type icon
@@ -130,6 +227,212 @@ const LocationDetail = ({ location, onBack }) => {
 
       {/* Content */}
       <div className="flex-1 p-4 overflow-y-auto">
+        {/* AI Insights Panel */}
+        <div className="mb-6">
+          <div className="bg-gradient-to-r from-indigo-700 to-purple-800 rounded-lg shadow-lg overflow-hidden text-white">
+            <div className="p-4 border-b border-indigo-600 flex justify-between items-center">
+              <div className="flex items-center">
+                <Brain size={20} className="mr-2" />
+                <h3 className="font-semibold">AI Network Insights</h3>
+              </div>
+              <div className="text-xs bg-indigo-900 rounded-full px-3 py-1 flex items-center">
+                <Zap size={12} className="mr-1" />
+                AI Powered
+              </div>
+            </div>
+
+            {loadingAiInsights ? (
+              <div className="p-8 text-center">
+                <div className="inline-block w-8 h-8 relative">
+                  <div className="absolute top-0 left-0 w-full h-full border-4 border-indigo-300 border-opacity-20 rounded-full"></div>
+                  <div className="absolute top-0 left-0 w-full h-full border-4 border-t-indigo-100 rounded-full animate-spin"></div>
+                </div>
+                <p className="mt-4 text-indigo-100">AI analyzing network data...</p>
+              </div>
+            ) : aiInsights ? (
+              <div className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Network Health Score */}
+                  <div className="bg-indigo-900 bg-opacity-50 rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <h4 className="text-sm font-medium text-indigo-200">Network Health Score</h4>
+                      <span className={`flex items-center text-xs ${aiInsights.networkHealth.trend === 'up' ? 'text-green-300' : 'text-red-300'}`}>
+                        <TrendingUp size={12} className="mr-1" />
+                        {aiInsights.networkHealth.trend === 'up' ? 'Improving' : 'Degrading'}
+                      </span>
+                    </div>
+                    <div className="flex items-end justify-between">
+                      <div className="relative w-24 h-24">
+                        <svg className="w-full h-full" viewBox="0 0 100 100">
+                          {/* Background circle */}
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="45"
+                            fill="none"
+                            stroke="#4c1d95"
+                            strokeWidth="10"
+                          />
+                          {/* Progress circle */}
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="45"
+                            fill="none"
+                            stroke={aiInsights.networkHealth.score > 80 ? "#10b981" : aiInsights.networkHealth.score > 60 ? "#f59e0b" : "#ef4444"}
+                            strokeWidth="10"
+                            strokeDasharray="282.7"
+                            strokeDashoffset={282.7 - (aiInsights.networkHealth.score / 100) * 282.7}
+                            strokeLinecap="round"
+                            transform="rotate(-90 50 50)"
+                            className="transition-all duration-1000"
+                          />
+                          <text
+                            x="50"
+                            y="55"
+                            fontSize="20"
+                            fontWeight="bold"
+                            textAnchor="middle"
+                            fill="white"
+                          >
+                            {aiInsights.networkHealth.score}
+                          </text>
+                        </svg>
+                      </div>
+                      <div className="text-right">
+                        {aiInsights.networkHealth.anomalyDetected && (
+                          <div className="bg-red-900 text-red-100 px-2 py-1 rounded text-xs flex items-center mb-2">
+                            <AlertTriangle size={10} className="mr-1" />
+                            Anomaly Detected
+                          </div>
+                        )}
+                        <div className="text-xs text-indigo-200">
+                          Based on 24h performance data
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Predictive Alerts */}
+                  <div className="bg-indigo-900 bg-opacity-50 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-indigo-200 mb-3">Predictive Alerts</h4>
+                    {aiInsights.predictiveAlerts.length > 0 ? (
+                      <div className="space-y-3">
+                        {aiInsights.predictiveAlerts.map((alert, index) => (
+                          <div key={index} className={`p-2 rounded text-xs ${
+                            alert.severity === 'critical' ? 'bg-red-900 bg-opacity-60' : 'bg-yellow-900 bg-opacity-60'
+                          }`}>
+                            <div className="flex items-start">
+                              {alert.severity === 'critical' ? (
+                                <AlertCircle size={12} className="text-red-300 mt-0.5 mr-1.5 flex-shrink-0" />
+                              ) : (
+                                <AlertTriangle size={12} className="text-yellow-300 mt-0.5 mr-1.5 flex-shrink-0" />
+                              )}
+                              <div>
+                                <div className="font-medium mb-1">{alert.device}</div>
+                                <p>{alert.prediction}</p>
+                                <div className="mt-1 flex justify-between items-center">
+                                  <div className="w-2/3 h-1 bg-indigo-800 rounded-full overflow-hidden">
+                                    <div 
+                                      className={`h-full ${alert.severity === 'critical' ? 'bg-red-400' : 'bg-yellow-400'}`}
+                                      style={{ width: `${alert.confidence}%` }}
+                                    ></div>
+                                  </div>
+                                  <span className="text-indigo-200">{alert.confidence}% confidence</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-indigo-300 text-sm">
+                        No predictive alerts at this time
+                      </div>
+                    )}
+                  </div>
+
+                  {/* AI Recommendations */}
+                  <div className="bg-indigo-900 bg-opacity-50 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-indigo-200 mb-3">Recommended Actions</h4>
+                    {aiInsights.recommendations.length > 0 ? (
+                      <ul className="space-y-2">
+                        {aiInsights.recommendations.map((rec, index) => (
+                          <li key={index} className="flex items-start text-xs">
+                            <Zap size={12} className="text-indigo-300 mt-0.5 mr-2 flex-shrink-0" />
+                            <span>{rec}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-indigo-300 text-sm">
+                        No recommendations at this time
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Root Cause Analysis */}
+                {aiInsights.rootCauseAnalysis && (
+                  <div className="mt-4 bg-indigo-900 bg-opacity-50 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-indigo-200 mb-3">AI Root Cause Analysis</h4>
+                    <div className="flex items-start">
+                      <div className="flex-grow">
+                        <div className="bg-indigo-800 bg-opacity-70 p-3 rounded-lg text-sm">
+                          <div className="font-medium mb-1">Identified Issue</div>
+                          <p>{aiInsights.rootCauseAnalysis.cause}</p>
+                          
+                          <div className="mt-3 font-medium mb-1">Primary Affected Device</div>
+                          <p className="flex items-center">
+                            <Shield size={12} className="mr-1.5 text-red-300" />
+                            {aiInsights.rootCauseAnalysis.primaryDevice}
+                          </p>
+                          
+                          {aiInsights.rootCauseAnalysis.relatedDevices.length > 0 && (
+                            <>
+                              <div className="mt-3 font-medium mb-1">Related Affected Devices</div>
+                              <div className="flex flex-wrap gap-2">
+                                {aiInsights.rootCauseAnalysis.relatedDevices.map((device, idx) => (
+                                  <span key={idx} className="bg-indigo-700 px-2 py-0.5 rounded text-xs">
+                                    {device}
+                                  </span>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                          
+                          <div className="mt-3 font-medium mb-1">Affected Services</div>
+                          <div className="flex flex-wrap gap-2">
+                            {aiInsights.rootCauseAnalysis.affectedServices.map((service, idx) => (
+                              <span key={idx} className="bg-purple-800 px-2 py-0.5 rounded text-xs">
+                                {service}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="ml-4 flex-shrink-0 text-right">
+                        <div className="mb-2">
+                          <div className="text-xs text-indigo-200">Analysis Confidence</div>
+                          <div className="text-xl font-bold">{aiInsights.rootCauseAnalysis.confidence}%</div>
+                        </div>
+                        <div className="w-20 h-20 rounded-full bg-indigo-800 flex items-center justify-center mx-auto">
+                          <Cpu className="text-indigo-300" size={36} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-8 text-center">
+                <AlertTriangle size={24} className="mx-auto mb-2" />
+                <p>Unable to load AI insights</p>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Devices List */}
           <div className="lg:col-span-1">
@@ -278,7 +581,13 @@ const LocationDetail = ({ location, onBack }) => {
                             
                             {diagnosticResult.recommendations.length > 0 && (
                               <div>
-                                <h5 className="text-sm font-medium text-gray-500">Recommendations</h5>
+                                <div className="flex items-center">
+                                  <h5 className="text-sm font-medium text-gray-500">Recommendations</h5>
+                                  <span className="ml-2 bg-indigo-100 text-indigo-800 text-xs px-2 py-0.5 rounded-full flex items-center">
+                                    <Brain size={10} className="mr-1" />
+                                    AI Powered
+                                  </span>
+                                </div>
                                 <ul className="mt-2 space-y-1">
                                   {diagnosticResult.recommendations.map((recommendation, index) => (
                                     <li key={index} className="text-sm flex items-start">
