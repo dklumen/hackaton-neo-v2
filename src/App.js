@@ -133,7 +133,7 @@ const SimpleMapGlobe = ({ locations = [], onLocationSelect }) => {
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <ComposableMap
         projection="geoNaturalEarth1"
-        projectionConfig={{ scale: 210 }}
+        projectionConfig={{ scale: 206 }}
         style={{ width: "100%", height: "100%" }}
       >
         <Geographies geography={geoUrl}>
@@ -190,7 +190,7 @@ const SimpleMapGlobe = ({ locations = [], onLocationSelect }) => {
           backgroundColor: 'white',
           borderRadius: '4px',
           boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
-          padding: '10px',
+          padding: '14px',
           zIndex: 1000,
           maxWidth: '220px'
         }}>
@@ -200,6 +200,7 @@ const SimpleMapGlobe = ({ locations = [], onLocationSelect }) => {
               display: 'inline-block',
               width: '10px',
               height: '10px',
+              marginLeft: '10px',
               borderRadius: '50%',
               backgroundColor: hoveredLocation.status === "online" ? "#10B981" :
                               hoveredLocation.status === "warning" ? "#F59E0B" : "#EF4444"
@@ -208,7 +209,6 @@ const SimpleMapGlobe = ({ locations = [], onLocationSelect }) => {
           <p style={{ margin: '0 0 5px 0', fontSize: '14px', color: '#6B7280' }}>{hoveredLocation.country}</p>
           <p style={{ margin: 0, fontSize: '13px' }}>Devices: <strong>{hoveredLocation.devices}</strong></p>
           <p style={{ margin: '2px 0 0 0', fontSize: '13px' }}>Status: <strong>{hoveredLocation.status.charAt(0).toUpperCase() + hoveredLocation.status.slice(1)}</strong></p>
-          <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '5px' }}>Click for details</div>
         </div>
       )}
     </div>
