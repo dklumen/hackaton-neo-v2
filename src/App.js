@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
-import { Network, Bell, AlertTriangle, AlertCircle, CheckCircle, Server, ArrowLeft } from 'lucide-react';
+import { Network, Bell, AlertTriangle, AlertCircle, CheckCircle, Server, ArrowLeft, Brain } from 'lucide-react';
 import apiService from './services/apiService';
 import AiInsightsSidebar from './components/AiInsightsSidebar';
+import PredictiveHeatmap from './components/PredictiveHeatmap';
+
+// Import the Lumen logo SVG
+import lumenLogo from './lumen.svg';
+
+// Use the image in a component
+const LumenLogo = () => (
+  <img src={lumenLogo} alt="Lumen Technologies" style={{ height: '28px', marginRight: '30px' }} />
+);
 
 // World map data
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
@@ -123,8 +132,8 @@ const SimpleMapGlobe = ({ locations = [], onLocationSelect }) => {
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <ComposableMap
-        projection="geoMercator"
-        projectionConfig={{ scale: 100 }}
+        projection="geoNaturalEarth1"
+        projectionConfig={{ scale: 210 }}
         style={{ width: "100%", height: "100%" }}
       >
         <Geographies geography={geoUrl}>
@@ -211,6 +220,7 @@ function App() {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [locationDetails, setLocationDetails] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showHeatmap, setShowHeatmap] = useState(false);
   
   useEffect(() => {
     const fetchData = async () => {
@@ -259,13 +269,25 @@ function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: 'linear-gradient(to bottom, #EEF2FF, #E0E7FF)' }}>
-      {/* Header */}
-      <header style={{ background: 'linear-gradient(to right, #1E40AF, #3730A3)', color: 'white', padding: '16px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Network size={28} />
-          <div>
-            <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0 }}>NEO 2.0</h1>
-            <p style={{ color: '#BFDBFE', fontSize: '14px', margin: 0 }}>Global Network Monitoring</p>
+      {/* Header with Lumen Logo */}
+      <header style={{ 
+        background: 'linear-gradient(to right, white 220px, #00B2E3 400px)',
+        padding: '16px', 
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          {/* Logo on the left */}
+          <div style={{ marginLeft: '12px' }}>
+            <LumenLogo />
+          </div>
+          
+          {/* NEO 2.0 section on the far right */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginRight: '20px' }}>
+            <Network size={28} style={{ color: 'white' }} />
+            <div>
+              <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0, color: 'white' }}>NEO <span style={{ fontWeight: '200' }}>Mind</span></h1>
+              <p style={{ color: 'white', fontSize: '11px', fontWeight: '600', margin: 0 }}>Global Network Monitoring</p>
+            </div>
           </div>
         </div>
       </header>
@@ -277,7 +299,34 @@ function App() {
           {/* Map Area */}
           <div style={{ flex: 1 }}>
             <div style={{ height: '100%', padding: '16px', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ flex: 1, backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'flex-end', 
+                marginBottom: '8px' 
+              }}>
+                <button 
+                  onClick={() => setShowHeatmap(!showHeatmap)}
+                  style={{
+                    backgroundColor: showHeatmap ? '#00B2E3' : 'white',
+                    color: showHeatmap ? 'white' : '#333',
+                    border: '1px solid #00B2E3',
+                    borderRadius: '4px',
+                    padding: '6px 12px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    cursor: 'pointer',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  <Brain size={16} />
+                  {showHeatmap ? 'Hide AI Predictions' : 'Show AI Predictions'}
+                </button>
+              </div>
+              
+              <div style={{ flex: 1, backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', overflow: 'hidden', position: 'relative' }}>
                 {loading ? (
                   <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div style={{ textAlign: 'center' }}>
@@ -286,10 +335,16 @@ function App() {
                     </div>
                   </div>
                 ) : (
-                  <SimpleMapGlobe 
-                    locations={locations}
-                    onLocationSelect={setSelectedLocation}
-                  />
+                  <>
+                    <SimpleMapGlobe 
+                      locations={locations}
+                      onLocationSelect={setSelectedLocation}
+                    />
+                    <PredictiveHeatmap 
+                      visible={showHeatmap} 
+                      locations={locations} 
+                    />
+                  </>
                 )}
               </div>
             </div>
